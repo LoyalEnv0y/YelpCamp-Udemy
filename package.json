@@ -1,0 +1,27 @@
+{
+  "name": "yelpcamp",
+  "version": "1.0.0",
+  "description": "A project I am developing with the help of Colt Steele from Udemy",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LoyalEnv0y/YelpCamp-Udemy.git"
+  },
+  "keywords": [
+    "YelpCamp"
+  ],
+  "author": "Çetin 'LoyalEnv0y' Tekin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LoyalEnv0y/YelpCamp-Udemy/issues"
+  },
+  "homepage": "https://github.com/LoyalEnv0y/YelpCamp-Udemy#readme",
+  "dependencies": {
+    "ejs": "^3.1.8",
+    "express": "^4.18.2",
+    "mongoose": "^6.9.0"
+  }
+}
