@@ -38,11 +38,21 @@ app.get('/campgrounds', async (req, res) => {
     res.render('campgrounds/index', { campgrounds });
 })
 
+app.get('/campgrounds/new', (req, res) => {
+    res.render('campgrounds/new');
+});
+
+app.post('/campgrounds', async (req, res) => {
+    const newCamp = new Campground(req.body.campground);
+    await newCamp.save();
+    res.redirect(`/campgrounds/${newCamp._id}`); 
+});
+
 app.get('/campgrounds/:id', async (req, res) => {
     const { id } = req.params;
     const campground = await Campground.findById(id);
     res.render('campgrounds/show', { campground });
-})
+});
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
