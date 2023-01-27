@@ -45,14 +45,32 @@ app.get('/campgrounds/new', (req, res) => {
 app.post('/campgrounds', async (req, res) => {
     const newCamp = new Campground(req.body.campground);
     await newCamp.save();
-    res.redirect(`/campgrounds/${newCamp._id}`); 
+    res.redirect(`/campgrounds/${newCamp._id}`);
 });
 
 app.get('/campgrounds/:id', async (req, res) => {
     const { id } = req.params;
-    const campground = await Campground.findById(id);
-    res.render('campgrounds/show', { campground });
+    const foundCampground = await Campground.findById(id);
+    res.render('campgrounds/show', { campground: foundCampground });
 });
+
+app.get('/campgrounds/:id/edit', async (req, res) => {
+    const { id } = req.params;
+    const foundCampground = await Campground.findById(id);
+    res.render('campgrounds/edit', { campground: foundCampground });
+})
+
+app.put('/campgrounds/:id', async (req, res) => {
+    const { id } = req.params;
+    await Campground.findByIdAndUpdate(id, { ...req.body.campground }, { runValidators: true });
+    res.redirect(`/campgrounds/${id}`)
+})
+
+app.delete('/campgrounds/:id', async (req, res) => {
+    const { id } = req.params;
+    await Campground.findByIdAndDelete(id);
+    res.redirect('/campgrounds');
+})
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
