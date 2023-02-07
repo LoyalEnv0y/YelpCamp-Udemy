@@ -35,7 +35,7 @@ const seedImg = async () => {
 const seedDB = async () => {
     await Campground.deleteMany({});
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 30; i++) {
         const randCity = getSample(cities),
             randPlace = getSample(places),
             randDesc = getSample(descriptors),
