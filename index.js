@@ -15,14 +15,16 @@ const ejsMate = require('ejs-mate');
 // Mongoose
 const mongoose = require('mongoose');
 const Campground = require('./models/campground');
-const { campgroundSchema } = require('./schemas.js');
+const Review = require('./models/review');
+const { campgroundSchema, reviewSchema } = require('./schemas.js');
+const review = require('./models/review');
 
 // Below line is only here for the mongoose 6 error. 
 // You might not need this in the future.
 mongoose.set('strictQuery', true);
 
 async function main() {
-    await mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp')
+    await mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp',)
         .then(() => console.log('Mongodb connection successful'));
 }
 main().catch(() => console.log('Mongodb connection failed'));
@@ -42,7 +44,18 @@ const validateCampground = (req, res, next) => {
 
     if (error) {
         const msg = error.details.map(el => el.message).join(',');
-        throw new ExpressError(msg, 400)
+        throw new ExpressError(msg, 400);
+    }
+
+    next();
+}
+
+const validateReview = (req, res, next) => {
+    const { error } = reviewSchema.validate(req.body);
+
+    if (error) {
+        const msg = error.details.map(el => el.message).join(',');
+        throw new ExpressError(msg, 400);
     }
 
     next();
@@ -55,6 +68,7 @@ app.get('/', (req, res) => {
 
 app.get('/campgrounds', catchAsync(async (req, res) => {
     const campgrounds = await Campground.find();
+    console.log(campgrounds);
     res.render('campgrounds/index', { title: 'Campgrounds | All', campgrounds });
 }));
 
@@ -62,15 +76,15 @@ app.get('/campgrounds/new', (req, res) => {
     res.render('campgrounds/new', { title: 'Campgrounds | New', });
 });
 
-app.post('/campgrounds', validateCampground, catchAsync(async (req, res, next) => {
+app.post('/campgrounds', validateCampground, catchAsync(async (req, res) => {
     const newCamp = new Campground(req.body.campground);
     await newCamp.save();
     res.redirect(`/campgrounds/${newCamp._id}`);
 }));
 
-app.get('/campgrounds/:id', catchAsync(async (req, res, next) => {
+app.get('/campgrounds/:id', catchAsync(async (req, res) => {
     const { id } = req.params;
-    const foundCampground = await Campground.findById(id);
+    const foundCampground = await Campground.findById(id).populate('reviews');
 
     if (!foundCampground) {
         throw new ExpressError(`Cannot find a campground with this id: ${id}`, 404);
@@ -96,6 +110,29 @@ app.delete('/campgrounds/:id', catchAsync(async (req, res) => {
     await Campground.findByIdAndDelete(id);
     res.redirect('/campgrounds');
 }));
+
+// (start) Reviews
+app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const foundCampground = await Campground.findById(id);
+    const newReview = new Review(req.body.review);
+
+    foundCampground.reviews.push(newReview);
+    await newReview.save();
+    await foundCampground.save();
+
+    res.redirect(`/campgrounds/${id}`)
+}));
+
+app.delete('/campgrounds/:id/reviews/:reviewId', catchAsync(async (req, res) => {
+    const { id, reviewId } = req.params;
+    await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+    await Review.findByIdAndDelete(reviewId);
+
+    res.redirect(`/campgrounds/${id}`);
+}));
+
+// (end) Reviews
 
 app.all('*', (req, res, next) => {
     next(new ExpressError('Page not found', 404));
