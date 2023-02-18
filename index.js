@@ -10,6 +10,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Sessions
+const session = require('express-session');
+const sessionConfig = {
+    secret: 'This should be a better secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        httpOnly: true,
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
+}
+app.use(session(sessionConfig));
+
+// Flash
+const flash = require('connect-flash');
+app.use(flash());
+
 // Utils
 const ExpressError = require('./utils/ExpressError');
 
@@ -28,6 +46,13 @@ async function main() {
         .then(() => console.log('Mongodb connection successful'));
 }
 main().catch(() => console.log('Mongodb connection failed'));
+
+// Middleware
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
 
 // Routers
 const campgroundsRoutes = require('./Routes/campgrounds');
