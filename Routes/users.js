@@ -33,8 +33,6 @@ router.post('/register', catchAsync(async (req, res) => {
         req.flash('error', err.message);
         return res.redirect('/register');
     }
-
-
 }));
 
 router.get('/login', (req, res) => {
