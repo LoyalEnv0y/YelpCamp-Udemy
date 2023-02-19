@@ -47,19 +47,36 @@ async function main() {
 }
 main().catch(() => console.log('Mongodb connection failed'));
 
+const User = require('./models/user');
+
+// Passport
+const passport = require('passport');
+const localStrategy = require('passport-local');
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new localStrategy(User.authenticate()));
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 // Middleware
 app.use((req, res, next) => {
+    res.locals.currentUser = req.user;
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
 });
 
 // Routers
-const campgroundsRoutes = require('./Routes/campgrounds');
+const campgroundRoutes = require('./Routes/campgrounds');
 const reviewRoutes = require('./Routes/reviews');
+const userRoutes = require('./Routes/users');
 
-app.use('/campgrounds', campgroundsRoutes);
+app.use('/campgrounds', campgroundRoutes);
 app.use('/campgrounds/:id/reviews', reviewRoutes);
+app.use('/', userRoutes);
 
 // Routes
 app.get('/', (req, res) => {
