@@ -61,10 +61,23 @@ const seedImg = async () => {
     return pickedImages;
 }
 
+const clearPhotosFromCloudinary = async () => {
+    const oldCampgrounds = await Campground.find();
+
+    if (oldCampgrounds.length < 1) return;
+
+    for (let campground of oldCampgrounds) {
+        campground.images.forEach(async image => {
+            await cloudinary.uploader.destroy(image.filename);
+        })
+    }
+}
+
 const seedDB = async () => {
+    await clearPhotosFromCloudinary();
     await Campground.deleteMany({});
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 16; i++) {
         const randCity = getSample(cities),
             randPlace = getSample(places),
             randDesc = getSample(descriptors),
@@ -72,7 +85,8 @@ const seedDB = async () => {
             randPrice = Math.floor(Math.random() * 20) + 10;
 
         const newCamp = new Campground({
-            // author: '63f2205d98385ed4ffa8413c',
+            // For testing purposes. Below, write the admin id form mongo.
+            author: '63f2205d98385ed4ffa8413c',
             location: `${randCity.city}, ${randCity.state}`,
             title: `${randDesc} - ${randPlace}`,
             description: 'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Debitis, nihil tempora vel aspernatur quod aliquam illum! Iste impedit odio esse neque veniam molestiae eligendi commodi minus, beatae accusantium, doloribus quo!',
