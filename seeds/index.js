@@ -16,6 +16,11 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET
 });
 
+// MapBox
+const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
+const mapBoxToken = process.env.MAPBOX_PUBLIC_TOKEN;
+const geocoder = mbxGeocoding({ accessToken: mapBoxToken });
+
 // Below line is only here for the mongoose 6 error. 
 // You might not need this in the future.
 mongoose.set('strictQuery', true);
@@ -73,6 +78,15 @@ const clearPhotosFromCloudinary = async () => {
     }
 }
 
+const getGeoLocation = async (location) => {
+    const geoData = await geocoder.forwardGeocode({
+        query: location,
+        limit: 1
+    }).send()
+
+    return geoData.body.features[0].geometry;
+}
+
 const seedDB = async () => {
     await clearPhotosFromCloudinary();
     await Campground.deleteMany({});
@@ -84,14 +98,17 @@ const seedDB = async () => {
             randImgs = await seedImg(),
             randPrice = Math.floor(Math.random() * 20) + 10;
 
+        const randLocation = `${randCity.city}, ${randCity.state}`;
+
         const newCamp = new Campground({
             // For testing purposes. Below, write the admin id form mongo.
             author: '63f2205d98385ed4ffa8413c',
-            location: `${randCity.city}, ${randCity.state}`,
+            location: randLocation,
             title: `${randDesc} - ${randPlace}`,
             description: 'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Debitis, nihil tempora vel aspernatur quod aliquam illum! Iste impedit odio esse neque veniam molestiae eligendi commodi minus, beatae accusantium, doloribus quo!',
             price: randPrice,
-            images: randImgs
+            images: randImgs,
+            geometry: await getGeoLocation(randLocation)
         });
 
         await newCamp.save()
